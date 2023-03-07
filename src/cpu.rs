@@ -64,10 +64,14 @@ impl Cpu {
                 .expect(&format!("OpCode {:x} is not recognized", code));
 
             match code {
+                //LDA
                 0xA9 | 0xA5 | 0xB5 | 0xAD | 0xBD | 0xB9 | 0xA1 | 0xB1 => {
                     self.lda(&opcode.mode);
                 }
+                //STA
                 0x85 | 0x96 | 0x8D | 0x9D | 0x99 | 0x81 | 0x91 => self.sta(&opcode.mode),
+                //AND
+                0x29 | 0x25 | 0x35 | 0x2D | 0x3D | 0x39 | 0x21 | 0x31 => self.and(&opcode.mode),
                 0xAA => self.tax(),
                 0xE8 => self.inx(),
                 0x00 => {
@@ -127,6 +131,14 @@ impl Cpu {
                 panic!("mode {:?} is not supported", mode);
             }
         }
+    }
+
+    fn and(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_anddress(mode);
+        let data = self.memory.read(address);
+        return self
+            .register
+            .set_accumulator(data & self.register.accumulator);
     }
 
     pub fn tax(&mut self) {
