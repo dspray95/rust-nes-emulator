@@ -1,10 +1,25 @@
+use bitflags::bitflags;
+
+bitflags! {
+    pub struct CpuFlags: u8 {
+        const CARRY             = 0b00000001;
+        const ZERO              = 0b00000010;
+        const INTERRUPT_DISABLE = 0b00000100;
+        const DECIMAL_MODE      = 0b00001000;
+        const BREAK             = 0b00010000;
+        const BREAK2            = 0b00100000;
+        const OVERFLOW          = 0b01000000;
+        const NEGATIVE          = 0b10000000;
+    }
+}
+
 pub struct Register {
     pub program_counter: u16,
     pub pointer: u8,
     pub accumulator: u8,
     pub x: u8,
     pub y: u8,
-    pub processor_status: u8,
+    pub processor_status: CpuFlags,
 }
 
 impl Register {
@@ -15,7 +30,7 @@ impl Register {
             accumulator: 0,
             x: 0,
             y: 0,
-            processor_status: 0,
+            processor_status: CpuFlags::from_bits_truncate(0b100100),
         };
     }
 
@@ -24,17 +39,25 @@ impl Register {
         self.update_zero_and_negative_flags(self.accumulator);
     }
 
+    pub fn set_carry_flag(&mut self) {
+        self.processor_status.insert(CpuFlags::CARRY);
+    }
+
+    pub fn clear_carry_flag(&mut self) {
+        self.processor_status.remove(CpuFlags::CARRY);
+    }
+
     pub fn update_zero_and_negative_flags(&mut self, result: u8) {
         if result == 0 {
-            self.processor_status = self.processor_status | 0b0000_0010;
+            self.processor_status.insert(CpuFlags::ZERO);
         } else {
-            self.processor_status = self.processor_status & 0b1111_1101;
+            self.processor_status.remove(CpuFlags::ZERO);
         }
 
         if result & 0b1000_0000 != 0 {
-            self.processor_status = self.processor_status | 0b1000_0000;
+            self.processor_status.insert(CpuFlags::NEGATIVE);
         } else {
-            self.processor_status = self.processor_status & 0b0111_1111;
+            self.processor_status.remove(CpuFlags::NEGATIVE);
         }
     }
 }

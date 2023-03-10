@@ -133,6 +133,18 @@ impl Cpu {
         }
     }
 
+    fn asl(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_anddress(mode);
+        let mut data = self.memory.read(address);
+        if data >> 8 == 1 {
+            self.register.set_carry_flag();
+        } else {
+            self.register.clear_carry_flag();
+        }
+        data = data << 1;
+        self.register.set_accumulator(data);
+    }
+
     fn and(&mut self, mode: &AddressingMode) {
         let address = self.get_operand_anddress(mode);
         let data = self.memory.read(address);
